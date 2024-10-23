@@ -57,6 +57,22 @@ FE: One product model as a result of BE models join (product and it's stock)
 
 * Integrate the getProductsById lambda to return via GET `/products/{productId}` request a single product from the database.
 
+# Task 4.3 
+
+* Create a lambda function called createProduct under Product Service which will be triggered by the HTTP POST method.
+
+* The requested URL should be `/products`.
+
+* Implement its logic so it will be creating a new item in a Products table.
+
+* Save the URL (API Gateway URL) to execute the implemented lambda functions for later - you'll need to provide it in the PR (e.g in PR's description) when submitting the task.
+
+# Additional (optional) tasks
+
+* +6 (All languages) - POST `/products` lambda functions returns error 400 status code if product data is invalid
+* +6 (All languages) - All lambdas return error 500 status code on any error (DB connection, any unhandled error in code)
+* +6 (All languages) - All lambdas do `console.log` for each incoming requests and their arguments
+
 
 # Welcome to your CDK TypeScript project
 

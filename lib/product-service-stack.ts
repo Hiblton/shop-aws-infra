@@ -7,7 +7,7 @@ import { Construct } from 'constructs';
 
 const CORS_CONFIGURATION = {
     allowOrigins: ['https://d393tsl9iif6hb.cloudfront.net'],
-    allowMethods: ['OPTIONS', 'GET'],
+    allowMethods: ['OPTIONS', 'GET', 'POST'],
     allowHeaders: ['Content-Type'],
 }
 
@@ -48,6 +48,19 @@ export class ProductServiceStack extends cdk.Stack {
         productsTable.grantReadData(getProductsById);
         stockTable.grantReadData(getProductsById);
 
+        const createProduct = new lambda.Function(this, 'CreateProductFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            memorySize: 128,
+            timeout: cdk.Duration.seconds(5),
+            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
+            handler: 'handlers/createProduct.handler',
+            environment: {
+                PRODUCTS_TABLE_NAME: productsTable.tableName,
+            }
+        });
+
+        productsTable.grantWriteData(createProduct);
+
         const api = new apigateway.RestApi(this, 'ProductServiceApi', {
             restApiName: 'Product Service',
             description: 'This service serves products',
@@ -55,6 +68,7 @@ export class ProductServiceStack extends cdk.Stack {
 
         const productsResource = api.root.addResource('products');
         productsResource.addMethod('GET', new apigateway.LambdaIntegration(getProductsList));
+        productsResource.addMethod('POST', new apigateway.LambdaIntegration(createProduct));
         productsResource.addCorsPreflight(CORS_CONFIGURATION);
 
         const productByIdResource = api.root.addResource('{productId}');
