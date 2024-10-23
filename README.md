@@ -20,6 +20,43 @@ Stock model:
 
 * Write a script to fill tables with test examples. Store it in your Github repository. Execute it for your DB to fill data.
 
+# Task 4.2 
+
+* Extend your CDK Configuration file with data about your database table and pass it to lambda’s environment variables section.
+
+* Integrate the getProductsList lambda to return via GET `/products` request a list of products from the database (joined stock and products tables).
+
+* Implement a Product model on FE side as a joined model of product and stock by productId. For example:
+
+```
+BE: Separate tables in DynamoDB
+  Stock model example in DB:
+  {
+    product_id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4',
+    count: 2
+  }
+
+
+  Product model example in DB:
+  {
+    id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4'
+    title: 'Product Title',
+    description: 'This product ...',
+    price: 200
+  }
+FE: One product model as a result of BE models join (product and it's stock)
+  Product model example on Frontend side:
+  {
+    id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4',
+    count: 2
+    price: 200,
+    title: ‘Product Title’,
+    description: ‘This product ...’
+  }
+```
+
+* Integrate the getProductsById lambda to return via GET `/products/{productId}` request a single product from the database.
+
 
 # Welcome to your CDK TypeScript project
 
