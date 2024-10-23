@@ -65,7 +65,7 @@ FE: One product model as a result of BE models join (product and it's stock)
 
 * Implement its logic so it will be creating a new item in a Products table.
 
-* Save the URL (API Gateway URL) to execute the implemented lambda functions for later - you'll need to provide it in the PR (e.g in PR's description) when submitting the task.
+* Save the URL (API Gateway URL) to execute the implemented lambda functions for later - you'll need to provide it in the PR (e.g in PR's description) when submitting the task. POST endpoint: https://k0h09xn077.execute-api.eu-central-1.amazonaws.com/prod/products
 
 # Additional (optional) tasks
 

@@ -2,6 +2,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
+import { Product } from '../data/products';
 
 const headers = {
     "Content-Type": "application/json",
@@ -19,31 +20,24 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     const productsTableName = process.env.PRODUCTS_TABLE_NAME;
 
-    let data;
+    const data = (event.body || {}) as Product;
 
-    try {
-        data = JSON.parse(event.body!);
-    } catch (error) {
+    if (!data.title || typeof data.description !== 'string' || typeof data.price !== 'number') {
         return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({ message: "Invalid JSON format" })
-        };
-    }
-
-    if (!data.name || typeof data.price !== 'number' || typeof data.description !== 'string') {
-        return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ message: "Missing or invalid fields. Required fields: name (string), price (number), description (string)." })
+            body: JSON.stringify({
+                message: "Missing or invalid fields. Required fields: title (string), description (string), price (number), image (string, optional)."
+            })
         };
     }
 
     const product = {
         id: randomUUID(),
-        name: data.name,
+        title: data.title,
+        description: data.description,
         price: data.price,
-        description: data.description
+        image: data.image
     };
 
     const params = {
