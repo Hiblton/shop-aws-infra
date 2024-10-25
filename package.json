@@ -11,7 +11,8 @@
     "cdk": "cdk",
     "synth": "cdk synth",
     "deploy": "cdk deploy",
-    "destroy": "cdk destroy"
+    "destroy": "cdk destroy",
+    "db:populate:products": "node ./scripts/populate-products-and-stock"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
@@ -23,6 +24,8 @@
     "typescript": "~5.6.2"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.677.0",
+    "@aws-sdk/lib-dynamodb": "^3.677.0",
     "@types/aws-lambda": "^8.10.145",
     "aws-cdk-lib": "2.161.1",
     "constructs": "^10.0.0",

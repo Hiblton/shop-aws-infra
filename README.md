@@ -1,25 +1,78 @@
-# Task 3
+# Task 4.1
 
-link to app with connected '/products' endpoint
-https://d393tsl9iif6hb.cloudfront.net/
+* Use AWS Console to create two database tables in DynamoDB. Expected schemas for products and stock:
+
+```
+Product model:
+  products:
+    id -  uuid (Primary key)
+    title - text, not null
+    description - text
+    price - integer
+```
+
+```
+Stock model:
+  stock:
+    product_id - uuid (Foreign key from products.id)
+    count - integer (Total number of products in stock, can't be exceeded)
+```
+
+* Write a script to fill tables with test examples. Store it in your Github repository. Execute it for your DB to fill data.
+
+# Task 4.2 
+
+* Extend your CDK Configuration file with data about your database table and pass it to lambda’s environment variables section.
+
+* Integrate the getProductsList lambda to return via GET `/products` request a list of products from the database (joined stock and products tables).
+
+* Implement a Product model on FE side as a joined model of product and stock by productId. For example:
+
+```
+BE: Separate tables in DynamoDB
+  Stock model example in DB:
+  {
+    product_id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4',
+    count: 2
+  }
 
 
-direct link to the '/products/{id}' endpont - 200 OK
-https://k0h09xn077.execute-api.eu-central-1.amazonaws.com/prod/products/7567ec4b-b10c-45c5-9345-fc73c48a80a1
+  Product model example in DB:
+  {
+    id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4'
+    title: 'Product Title',
+    description: 'This product ...',
+    price: 200
+  }
+FE: One product model as a result of BE models join (product and it's stock)
+  Product model example on Frontend side:
+  {
+    id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4',
+    count: 2
+    price: 200,
+    title: ‘Product Title’,
+    description: ‘This product ...’
+  }
+```
 
+* Integrate the getProductsById lambda to return via GET `/products/{productId}` request a single product from the database.
 
-direct link to the '/products/{id}' endpont - 404 Not Found
-https://k0h09xn077.execute-api.eu-central-1.amazonaws.com/prod/products/7567ec4b-b10c-45c5-9345-fc73c48a80a2
+# Task 4.3 
 
+* Create a lambda function called createProduct under Product Service which will be triggered by the HTTP POST method.
 
-Notes:
-+5 - Async/await is used in lambda functions
-+5 - ES6 modules are used for Product Service implementation
--4 - Custom Webpack/ESBuild/etc is manually configured for Product Service. Not applicable for preconfigured/built-in bundlers that come with templates, plugins, etc.
--4 (All languages) - SWAGGER documentation is created for Product Service
-+4 (All languages) - Lambda handlers are covered by basic UNIT tests (NO infrastructure logic is needed to be covered)
-+4 (All languages) - Lambda handlers (getProductsList, getProductsById) code is written not in 1 single module (file) and separated in codebase.
-+4 (All languages) - Main error scenarios are handled by API ("Product not found" error).
+* The requested URL should be `/products`.
+
+* Implement its logic so it will be creating a new item in a Products table.
+
+* Save the URL (API Gateway URL) to execute the implemented lambda functions for later - you'll need to provide it in the PR (e.g in PR's description) when submitting the task. POST endpoint: https://k0h09xn077.execute-api.eu-central-1.amazonaws.com/prod/products
+
+# Additional (optional) tasks
+
+* +6 (All languages) - POST `/products` lambda functions returns error 400 status code if product data is invalid
+* +6 (All languages) - All lambdas return error 500 status code on any error (DB connection, any unhandled error in code)
+* +6 (All languages) - All lambdas do `console.log` for each incoming requests and their arguments
+
 
 # Welcome to your CDK TypeScript project
 
