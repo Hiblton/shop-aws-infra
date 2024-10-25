@@ -47,15 +47,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             Key: { product_id: productId }
         }));
 
-        const productWithStock = {
-            ...productData.Item,
-            count: stockData.Item?.count ?? 0
-        };
-
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(productWithStock),
+            body: JSON.stringify({...productData.Item, ...stockData.Item}),
         };
     } catch (error) {
         console.error("Error handling request:", error);

@@ -8,7 +8,7 @@ import { Construct } from 'constructs';
 const CORS_CONFIGURATION = {
     allowOrigins: ['https://d393tsl9iif6hb.cloudfront.net'],
     allowMethods: ['OPTIONS', 'GET', 'POST'],
-    allowHeaders: ['Content-Type'],
+    allowHeaders: ['Content-Type', 'Authorization'],
 }
 
 export class ProductServiceStack extends cdk.Stack {
@@ -22,8 +22,8 @@ export class ProductServiceStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_20_X,
             memorySize: 128,
             timeout: cdk.Duration.seconds(5),
-            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-            handler: 'handlers/getProductsList.handler',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/handlers/get-products')),
+            handler: 'getProducts.handler',
             environment: {
                 PRODUCTS_TABLE_NAME: productsTable.tableName,
                 STOCK_TABLE_NAME: stockTable.tableName
@@ -37,8 +37,8 @@ export class ProductServiceStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_20_X,
             memorySize: 128,
             timeout: cdk.Duration.seconds(5),
-            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-            handler: 'handlers/getProductsById.handler',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/handlers/get-product-by-id')),
+            handler: 'getProductById.handler',
             environment: {
                 PRODUCTS_TABLE_NAME: productsTable.tableName,
                 STOCK_TABLE_NAME: stockTable.tableName
@@ -52,14 +52,16 @@ export class ProductServiceStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_20_X,
             memorySize: 128,
             timeout: cdk.Duration.seconds(5),
-            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-            handler: 'handlers/createProduct.handler',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/handlers/create-product')),
+            handler: 'createProduct.handler',
             environment: {
                 PRODUCTS_TABLE_NAME: productsTable.tableName,
+                STOCK_TABLE_NAME: stockTable.tableName
             }
         });
 
         productsTable.grantWriteData(createProduct);
+        stockTable.grantWriteData(createProduct);
 
         const api = new apigateway.RestApi(this, 'ProductServiceApi', {
             restApiName: 'Product Service',
@@ -71,7 +73,7 @@ export class ProductServiceStack extends cdk.Stack {
         productsResource.addMethod('POST', new apigateway.LambdaIntegration(createProduct));
         productsResource.addCorsPreflight(CORS_CONFIGURATION);
 
-        const productByIdResource = api.root.addResource('{productId}');
+        const productByIdResource = productsResource.addResource('{productId}');
         productByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getProductsById));
         productByIdResource.addCorsPreflight(CORS_CONFIGURATION);
     }
