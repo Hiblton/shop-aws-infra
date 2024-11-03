@@ -1,4 +1,4 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -12,8 +12,9 @@ const headers = {
 
 const s3 = new S3Client();
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: APIGatewayProxyHandler = async (event): Promise<APIGatewayProxyResult> => {
     const fileName = event.queryStringParameters?.name;
+
     if (!fileName) {
         return {
             statusCode: 400,
@@ -22,8 +23,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         };
     }
 
-    const fileExt = fileName.split('.').pop();
-    if (fileExt !== 'csv') {
+    if (!fileName.endsWith('.csv')) {
         return {
             statusCode: 400,
             headers,

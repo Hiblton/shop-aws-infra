@@ -81,7 +81,6 @@ export class ImportServiceStack extends Stack {
             }
         });
 
-        importBucket.grantRead(importFileParser);
         importBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(importFileParser), {
             prefix: 'uploaded/',
         });

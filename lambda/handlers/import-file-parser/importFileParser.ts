@@ -8,7 +8,7 @@ const s3Client = new S3Client();
 export const handler: S3Handler = async (event) => {
     for (const record of event.Records) {
         const bucketName = record.s3.bucket.name;
-        const objectKey = decodeURIComponent(record.s3.object.key.replace(/\+/g, ' '));
+        const objectKey = record.s3.object.key;
 
         const getObjectParams = {
             Bucket: bucketName,
