@@ -5,6 +5,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as path from 'path';
 
 const CORS_CONFIGURATION = {
@@ -42,7 +43,7 @@ export class ImportServiceStack extends Stack {
 
         lambdaRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            actions: ['s3:GetObject', 's3:PutObject'],
+            actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject'],
             resources: [importBucket.bucketArn, `${importBucket.bucketArn}/*`],
         }));
 
@@ -58,6 +59,22 @@ export class ImportServiceStack extends Stack {
         });
 
         importBucket.grantPut(importProductsFile);
+
+        const importFileParser = new lambda.Function(this, 'ImportFileParser', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            memorySize: 128,
+            handler: 'importFileParser.handler',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/handlers/import-file-parser')),
+            role: lambdaRole,
+            environment: {
+                BUCKET_NAME: importBucket.bucketName,
+            }
+        });
+
+        importBucket.grantRead(importFileParser);
+        importBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(importFileParser), {
+            prefix: 'uploaded/',
+        });
 
         const api = new apigateway.RestApi(this, 'ImportServiceApi', {
             restApiName: 'Import Service API'
