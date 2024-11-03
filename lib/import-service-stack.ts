@@ -38,6 +38,9 @@ export class ImportServiceStack extends Stack {
 
         const lambdaRole = new iam.Role(this, 'LambdaExecutionRole', {
             assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+            managedPolicies: [
+                iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+            ],
             description: 'Role for Import Products Lambda Function',
         });
 
