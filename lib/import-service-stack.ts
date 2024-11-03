@@ -60,12 +60,19 @@ export class ImportServiceStack extends Stack {
 
         importBucket.grantPut(importProductsFile);
 
+        const csvParserLayer = new lambda.LayerVersion(this, 'CsvParserLayer', {
+            code: lambda.Code.fromAsset(path.join(__dirname, '../lambda-layers/csv-parser-layer')),
+            compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+            description: 'A layer that contains the csv-parser package',
+        });
+
         const importFileParser = new lambda.Function(this, 'ImportFileParser', {
             runtime: lambda.Runtime.NODEJS_20_X,
             memorySize: 128,
             handler: 'importFileParser.handler',
             code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/handlers/import-file-parser')),
             role: lambdaRole,
+            layers: [csvParserLayer],
             environment: {
                 BUCKET_NAME: importBucket.bucketName,
             }

@@ -1,7 +1,7 @@
 import { S3Handler } from 'aws-lambda';
 import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import * as stream from 'stream';
-// import * as csv from 'csv-parser';
+import * as csv from 'csv-parser';
 
 const s3Client = new S3Client();
 
@@ -20,8 +20,7 @@ export const handler: S3Handler = async (event) => {
             const { Body } = await s3Client.send(getObjectCommand);
 
             const s3Stream = Body as stream.Readable;
-            s3Stream
-                //.pipe(csv())
+            s3Stream.pipe(csv())
                 .on('data', (data: any) => console.log(data))
                 .on('end', async () => {
                     console.log('CSV file has been processed successfully.');
