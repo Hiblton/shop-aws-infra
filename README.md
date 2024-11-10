@@ -1,86 +1,34 @@
-# Task 4.1
+# Tasks
 
-* Use AWS Console to create two database tables in DynamoDB. Expected schemas for products and stock:
+## Task 5.1
+CDK Stack Creation: Create a new CDK stack named ImportServiceStack, at the same level as your existing ProductServiceStack. This aligns with the structure of having separate services in your backend repository.
+Repository Structure:
+backend-repository
+  - lib
+    - product-service-stack.ts
+    - import-service-stack.ts
+S3 Bucket Creation: Using the CDK, define and deploy an S3 bucket in your ImportServiceStack. Include a folder named uploaded in the bucket definition
 
-```
-Product model:
-  products:
-    id -  uuid (Primary key)
-    title - text, not null
-    description - text
-    price - integer
-```
+## Task 5.2
+Lambda Function Setup: Define a new Lambda function named importProductsFile within the ImportServiceStack. This function will be triggered by an HTTP GET request.
+API Gateway Integration: Create an API Gateway resource with a GET method at the path /import that triggers the importProductsFile Lambda function.
+Function Logic: Implement the function to expect a request containing the name of a CSV file with products. It should create a new Signed URL for the file, using the key pattern: `uploaded/${fileName}`. The file name should be received as a query string parameter.
+CDK Stack Permissions: Update the ImportServiceStack to include necessary IAM policies allowing the Lambda function to interact with the specified S3 bucket.
+Return Signed URL: Ensure the Lambda function responds with the created Signed URL.
+Frontend Integration: Update the frontend configuration to integrate the new Lambda endpoint under the import API path.
 
-```
-Stock model:
-  stock:
-    product_id - uuid (Foreign key from products.id)
-    count - integer (Total number of products in stock, can't be exceeded)
-```
+## Task 5.3 
+Lambda Function Creation: Define another Lambda function named importFileParser within the ImportServiceStack, which will be triggered by an S3 event.
+S3 Event Configuration: Configure the function trigger to respond to s3:ObjectCreated:* events, specifically for objects created in the uploaded folder of your S3 bucket.
+Function Implementation: The importFileParser function should use a readable stream to retrieve objects from S3, parse them using the csv-parser package, and log each record for visibility in CloudWatch.
 
-* Write a script to fill tables with test examples. Store it in your Github repository. Execute it for your DB to fill data.
-
-# Task 4.2 
-
-* Extend your CDK Configuration file with data about your database table and pass it to lambda’s environment variables section.
-
-* Integrate the getProductsList lambda to return via GET `/products` request a list of products from the database (joined stock and products tables).
-
-* Implement a Product model on FE side as a joined model of product and stock by productId. For example:
-
-```
-BE: Separate tables in DynamoDB
-  Stock model example in DB:
-  {
-    product_id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4',
-    count: 2
-  }
+## Additional (optional) tasks 
++10 (for JS only) - async/await is used in lambda functions
++10 (All languages) - importProductsFile lambda is covered by unit tests. (for JS only) aws-sdk-mock can be used to mock S3 methods
++10 (All languages) - At the end of the stream the lambda function should move the file from the uploaded folder into the parsed folder (move the file means that file should be copied into a new folder in the same bucket called parsed, and then deleted from uploaded folder)
 
 
-  Product model example in DB:
-  {
-    id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4'
-    title: 'Product Title',
-    description: 'This product ...',
-    price: 200
-  }
-FE: One product model as a result of BE models join (product and it's stock)
-  Product model example on Frontend side:
-  {
-    id: '19ba3d6a-f8ed-491b-a192-0a33b71b38c4',
-    count: 2
-    price: 200,
-    title: ‘Product Title’,
-    description: ‘This product ...’
-  }
-```
-
-* Integrate the getProductsById lambda to return via GET `/products/{productId}` request a single product from the database.
-
-# Task 4.3 
-
-* Create a lambda function called createProduct under Product Service which will be triggered by the HTTP POST method.
-
-* The requested URL should be `/products`.
-
-* Implement its logic so it will be creating a new item in a Products table.
-
-* Save the URL (API Gateway URL) to execute the implemented lambda functions for later - you'll need to provide it in the PR (e.g in PR's description) when submitting the task. POST endpoint: https://k0h09xn077.execute-api.eu-central-1.amazonaws.com/prod/products
-
-# Additional (optional) tasks
-
-* +6 (All languages) - POST `/products` lambda functions returns error 400 status code if product data is invalid
-* +6 (All languages) - All lambdas return error 500 status code on any error (DB connection, any unhandled error in code)
-* +6 (All languages) - All lambdas do `console.log` for each incoming requests and their arguments
-
-
-# Welcome to your CDK TypeScript project
-
-This is a blank project for CDK development with TypeScript.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
-## Useful commands
+# Useful commands
 
 * `npm run build`   compile typescript to js
 * `npm run watch`   watch for changes and compile
