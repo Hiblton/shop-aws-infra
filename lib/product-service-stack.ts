@@ -111,6 +111,13 @@ export class ProductServiceStack extends cdk.Stack {
         }));
 
         createProductTopic.grantPublish(productBatchProcess);
-        createProductTopic.addSubscription(new subscriptions.EmailSubscription("//TEST_EMAIL"));
+        createProductTopic.addSubscription(new subscriptions.EmailSubscription("hiblton91@gmail.com"));
+        createProductTopic.addSubscription(new subscriptions.EmailSubscription("hiblton91+out@gmail.com", {
+            filterPolicy: {
+                count: sns.SubscriptionFilter.numericFilter({
+                    lessThanOrEqualTo: 0
+                })
+            }
+        }));
     }
 }

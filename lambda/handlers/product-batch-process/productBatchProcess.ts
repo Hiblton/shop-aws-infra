@@ -13,6 +13,7 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
     const productsTable = process.env.PRODUCTS_TABLE_NAME;
     const stockTable = process.env.STOCK_TABLE_NAME;
     const topicArn = process.env.SNS_TOPIC_ARN;
+    const outOfStockProductIds: string[] = [];
 
     const transactionItems = event.Records.flatMap(record => {
         const data = JSON.parse(record.body);
@@ -30,6 +31,10 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
             product_id: productId,
             count: data.count
         };
+
+        if (data.count < 1) {
+            outOfStockProductIds.push(productId);
+        }
 
         return [
             {
@@ -53,11 +58,27 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
 
     try {
         await docClient.send(new TransactWriteCommand(transactionParams));
+
         await snsClient.send(new PublishCommand({
-            Subject: 'Task 6',
+            Subject: 'Task 6: products saved!',
             Message: 'Products saved successfully.',
             TopicArn: topicArn
         }));
+
+        if (outOfStockProductIds.length > 0) {
+            await snsClient.send(new PublishCommand({
+                Subject: 'Task 6: out of stock!',
+                Message: `Out of stock product IDs: ${outOfStockProductIds.join()}.`,
+                TopicArn: topicArn,
+                MessageAttributes: {
+                    count: {
+                        DataType: 'Number',
+                        StringValue: "0"
+                    }
+                }
+            }))
+        }
+
         console.log('Products saved successfully.');
     } catch (error) {
         console.error('Error processing transaction:', error);
