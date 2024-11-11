@@ -6,6 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
 
 const CORS_CONFIGURATION = {
@@ -14,8 +15,12 @@ const CORS_CONFIGURATION = {
     allowHeaders: ['Content-Type', 'Authorization'],
 }
 
+interface ImportServiceStackProps extends StackProps {
+    queue: sqs.Queue
+}
+
 export class ImportServiceStack extends Stack {
-    constructor(scope: Construct, id: string, props?: StackProps) {
+    constructor(scope: Construct, id: string, props: ImportServiceStackProps) {
         super(scope, id, props);
 
         const importBucket = new s3.Bucket(this, "ImportBucket", {
@@ -77,9 +82,11 @@ export class ImportServiceStack extends Stack {
             role: lambdaRole,
             layers: [csvParserLayer],
             environment: {
-                BUCKET_NAME: importBucket.bucketName,
+                SQS_QUEUE_URL: props.queue.queueUrl
             }
         });
+
+        props.queue.grantSendMessages(importFileParser);
 
         importBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(importFileParser), {
             prefix: 'uploaded/',
