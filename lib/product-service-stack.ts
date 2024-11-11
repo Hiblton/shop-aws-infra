@@ -3,6 +3,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as path from 'path';
 import { Construct } from 'constructs';
 
@@ -20,6 +22,10 @@ export class ProductServiceStack extends cdk.Stack {
 
         this.productItemsQueue = new sqs.Queue(this, 'ProductItemsQueue', {
             queueName: 'productItemsQueue'
+        });
+
+        const createProductTopic = new sns.Topic(this, 'CreateProductTopic', {
+            displayName: 'createProductTopic'
         });
 
         const productsTable = dynamodb.Table.fromTableName(this, 'ProductsTable', 'products');
@@ -92,7 +98,8 @@ export class ProductServiceStack extends cdk.Stack {
             handler: 'productBatchProcess.handler',
             environment: {
                 PRODUCTS_TABLE_NAME: productsTable.tableName,
-                STOCK_TABLE_NAME: stockTable.tableName
+                STOCK_TABLE_NAME: stockTable.tableName,
+                SNS_TOPIC_ARN: createProductTopic.topicArn
             }
         });
 
@@ -102,5 +109,8 @@ export class ProductServiceStack extends cdk.Stack {
         productBatchProcess.addEventSource(new cdk.aws_lambda_event_sources.SqsEventSource(this.productItemsQueue, {
             batchSize: 5
         }));
+
+        createProductTopic.grantPublish(productBatchProcess);
+        createProductTopic.addSubscription(new subscriptions.EmailSubscription("//TEST_EMAIL"));
     }
 }
