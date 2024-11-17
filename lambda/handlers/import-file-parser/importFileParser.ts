@@ -1,9 +1,12 @@
 import { S3Handler } from 'aws-lambda';
 import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import * as stream from 'stream';
 import * as csv from 'csv-parser';
 
 const s3Client = new S3Client();
+const sqsClient = new SQSClient();
+const queueUrl = process.env.SQS_QUEUE_URL;
 
 export const handler: S3Handler = async (event) => {
     for (const record of event.Records) {
@@ -21,7 +24,12 @@ export const handler: S3Handler = async (event) => {
 
             const s3Stream = Body as stream.Readable;
             s3Stream.pipe(csv())
-                .on('data', (data: any) => console.log(data))
+                .on('data', async (data: any) => {
+                    await sqsClient.send(new SendMessageCommand({
+                        QueueUrl: queueUrl,
+                        MessageBody: JSON.stringify(data)
+                    }));
+                })
                 .on('end', async () => {
                     console.log('CSV file has been processed successfully.');
                     await moveToParsedFolder(bucketName, objectKey);
