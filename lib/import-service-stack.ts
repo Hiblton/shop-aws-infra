@@ -1,4 +1,4 @@
-import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy, Stack, StackProps, Fn } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -96,9 +96,35 @@ export class ImportServiceStack extends Stack {
             restApiName: 'Import Service API'
         });
 
+        const basicAuthorizerArn = Fn.importValue('BasicAuthorizerArn');
+
+        const authorizer = new apigateway.TokenAuthorizer(this, 'APIGatewayAuthorizer', {
+            handler: lambda.Function.fromFunctionArn(this, 'BasicAuthorizerFunction', basicAuthorizerArn),
+            identitySource: 'method.request.header.Authorization'
+        });
+
         const importResource = api.root.addResource('import');
-        importResource.addMethod('GET', new apigateway.LambdaIntegration(importProductsFile));
         importResource.addCorsPreflight(CORS_CONFIGURATION);
+        importResource.addMethod('GET', new apigateway.LambdaIntegration(importProductsFile), {
+            authorizationType: apigateway.AuthorizationType.CUSTOM,
+            authorizer,
+        });
+
+        api.addGatewayResponse('AuthorizerUnauthorized', {
+            type: apigateway.ResponseType.UNAUTHORIZED,
+            statusCode: '401',
+            responseHeaders: {
+                'Access-Control-Allow-Origin': "'*'",
+            }
+        });
+
+        api.addGatewayResponse('AuthorizerForbidden', {
+            type: apigateway.ResponseType.ACCESS_DENIED,
+            statusCode: '403',
+            responseHeaders: {
+                'Access-Control-Allow-Origin': "'*'",
+            }
+        });
 
         new CfnOutput(this, "APIGatewayURL", {
             value: api.url,
