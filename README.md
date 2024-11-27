@@ -1,23 +1,40 @@
 # Tasks
 
-## Task 6.1
-Create a lambda function called catalogBatchProcess under the same product service stack which will be triggered by an SQS event.
-Create an SQS queue called catalogItemsQueue in this stack.
-Configure the SQS to trigger lambda catalogBatchProcess with 5 messages at once via batchSize property.
-The lambda function should iterate over all SQS messages and create corresponding products in the products table.
+## Task 7.1
+Create a new service called authorization-service at the same level as Product and Import services. The backend project structure should look like this:
+```
+   backend-repository
+      product-service
+      import-service
+      authorization-service
+```
+Create a lambda function called basicAuthorizer under the same config file of the Authorization Service.
+This lambda should have at least one environment variable with the following credentials:
+  `{yours_github_account_login}=TEST_PASSWORD`
+{yours_github_account_login} - your GitHub account name. Login for test user should be your GitHub account name
+TEST_PASSWORD - password string. Password for test user must be "TEST_PASSWORD"
+example: johndoe=TEST_PASSWORD
+This basicAuthorizer lambda should take Basic Authorization token, decode it and check that credentials provided by token exist in the lambda environment variable.
+This lambda should return 403 HTTP status if access is denied for this user (invalid authorization_token) and 401 HTTP status if Authorization header is not provided.
+NOTE: Do not send your credentials to the GitHub. Use .env file to add environment variables to the lambda. Add .env file to .gitignore file.
+  .env file example:
+    `vasiapupkin=TEST_PASSWORD`
 
-## Task 6.2
-Update the importFileParser lambda function in the Import Service to send each CSV record into SQS.
-It should no longer log entries from the readable stream to CloudWatch.
+## Task 7.2 
+Add Lambda authorization to the `/import` path of the Import Service API Gateway.
+Use your basicAuthorizer lambda as the Lambda authorizer
 
-## Task 6.3 
-Create an SNS topic createProductTopic and email subscription in the product service stack.
-Create a subscription for this SNS topic with an email endpoint type with your own email in there.
-Update the catalogBatchProcess lambda function in the Product Service to send an event to the SNS topic once it creates products.
+## Task 7.3 
+Request from the client application to the `/import` path of the Import Service should have Basic Authorization header:
+  Authorization: Basic {authorization_token}
+{authorization_token} is a base64-encoded {yours_github_account_login}:TEST_PASSWORD
+example: Authorization: Basic sGLzdRxvZmw0ZXs0UGFzcw==
+Client should get authorization_token value from browser localStorage
+  `const authorization_token = localStorage.getItem('authorization_token')`
+
 
 ## Additional (optional) tasks 
-+15 (All languages) - catalogBatchProcess lambda is covered by unit tests
-+15 (All languages) - set a Filter Policy for SNS createProductTopic in the CDK stack and create an additional email subscription to distribute messages to different emails depending on the filter for any product attribute
++30 (All languages) - Client application should display alerts for the responses in 401 and 403 HTTP statuses. This behavior should be added to the `nodejs-aws-fe-main/src/index.tsx` file.
 
 
 # Useful commands
